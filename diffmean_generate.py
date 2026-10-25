@@ -1,15 +1,9 @@
 import argparse
 import json
 import sys
-from pathlib import Path
 from types import MethodType
-
 import torch
 from vllm import LLM, SamplingParams
-
-PROJECT_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(PROJECT_DIR))
-
 from utils.utils import get_test_questions
 
 
