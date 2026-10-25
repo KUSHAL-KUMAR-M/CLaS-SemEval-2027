@@ -1,69 +1,20 @@
 import argparse
 import json
 import os
+from functools import partial
 
 # apply_model() sends a Python function to the vLLM workers, which needs this flag
 os.environ.setdefault("VLLM_ALLOW_INSECURE_SERIALIZATION", "1")
 
 import torch
 from utils.utils import get_test_questions
+from utils.steering_hooks import install_hooks, set_steering
 
 
 # ----------------------------------------------------------------------------
 # vLLM backend: hooks are installed INSIDE the worker processes via apply_model
+# (the worker functions are in utils/steering_hooks.py)
 # ----------------------------------------------------------------------------
-def make_worker_functions():
-    """Functions that run inside the vLLM workers (they receive the nn.Module)."""
-
-    def get_model_layers(model):
-        try:
-            return model.model.layers                    # Llama / Aya style
-        except AttributeError:
-            try:
-                return model.language_model.model.layers  # Gemma-3 style
-            except AttributeError:
-                raise RuntimeError("Could not access model layers. Model architecture may not be supported.")
-
-    def install_hooks(model):
-        """Wrap every layer's forward once. Steering stays off until set_steering() is called."""
-        layers = get_model_layers(model)
-        for layer in layers:
-            if getattr(layer, "_steering_installed", False):
-                continue
-            original = layer.forward
-
-            def forward_hook(*args, _original=original, _layer=layer, **kwargs):
-                outputs = _original(*args, **kwargs)
-                vec = _layer._steering_vec
-                if vec is None:
-                    return outputs
-                # vLLM layers return (hidden_states, residual); the residual stream is their sum,
-                # so adding to hidden_states shifts the stream.
-                if isinstance(outputs, (tuple, list)):
-                    return (outputs[0] + vec,) + tuple(outputs[1:])
-                return outputs + vec
-
-            layer.forward = forward_hook
-            layer._steering_installed = True
-            layer._steering_vec = None
-        return len(layers)
-
-    def make_set_steering(directions, layer_start, layer_end):
-        """directions: [num_layers, hidden_size] already scaled by the strength (None = steering off)"""
-        def set_steering(model):
-            layers = get_model_layers(model)
-            for idx, layer in enumerate(layers):
-                if directions is not None and layer_start <= idx < layer_end:
-                    p = next(layer.parameters())
-                    layer._steering_vec = directions[idx].to(device=p.device, dtype=p.dtype)
-                else:
-                    layer._steering_vec = None
-            return sum(layer._steering_vec is not None for layer in layers)
-        return set_steering
-
-    return install_hooks, make_set_steering
-
-
 class VLLMSteerer:
     def __init__(self, args):
         from vllm import LLM, SamplingParams
@@ -78,8 +29,7 @@ class VLLMSteerer:
             dtype="float16",                 # T4 has no bfloat16
             enable_prefix_caching=False,     # needed so cached KV is not reused across different steering
         )
-        self.install_hooks, self.make_set_steering = make_worker_functions()
-        print("Wrapped layers per worker:", self.model.apply_model(self.install_hooks))
+        print("Wrapped layers per worker:", self.model.apply_model(install_hooks))
 
         tokenizer = self.model.get_tokenizer()
         stop_token_ids = [tokenizer.eos_token_id] if tokenizer.eos_token_id is not None else None
@@ -92,14 +42,14 @@ class VLLMSteerer:
         )
 
     def generate(self, prompts, directions, layer_start, layer_end):
-        active = self.model.apply_model(self.make_set_steering(directions, layer_start, layer_end))
+        active = self.model.apply_model(partial(set_steering, directions, layer_start, layer_end))
         print(f"Steered layers per worker: {active}")
 
         messages = [[{"role": "user", "content": p}] for p in prompts]
         try:
             outputs = self.model.chat(messages, sampling_params=self.sampling_params)
         finally:
-            self.model.apply_model(self.make_set_steering(None, 0, 0))  # steering off again
+            self.model.apply_model(partial(set_steering, None, 0, 0))  # steering off again
         return [o.outputs[0].text.strip() for o in outputs]
 
 
