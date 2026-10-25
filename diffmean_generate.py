@@ -1,366 +1,298 @@
 import argparse
 import json
-import sys
-from types import MethodType
+import os
+
+# apply_model() sends a Python function to the vLLM workers, which needs this flag
+os.environ.setdefault("VLLM_ALLOW_INSECURE_SERIALIZATION", "1")
+
 import torch
 from vllm import LLM, SamplingParams
 from utils.utils import get_test_questions
 
 
-def get_model_layers(model):
-    """Locate decoder layers for supported model architectures."""
-    root = model.llm_engine.model_executor.driver_worker.model_runner.model
+def make_worker_functions():
+    """Functions that run INSIDE the vLLM worker processes (they receive the nn.Module)."""
 
-    candidates = [
-        lambda: root.model.layers,
-        lambda: root.model.language_model.model.layers,
-    ]
-
-    for candidate in candidates:
+    def get_model_layers(model):
+        """Get model layers with compatibility for different model architectures"""
         try:
-            return candidate()
+            # Llama / Aya style models
+            return model.model.layers
         except AttributeError:
-            continue
+            try:
+                # Gemma-3 style models
+                return model.language_model.model.layers
+            except AttributeError:
+                raise RuntimeError("Could not access model layers. Model architecture may not be supported.")
 
-    raise RuntimeError(
-        "Could not locate decoder layers in this vLLM version. "
-        "Inspect the model architecture and vLLM worker structure."
-    )
+    def install_hooks(model):
+        """Wrap every layer's forward once. Steering stays off until set_steering() is called."""
+        layers = get_model_layers(model)
+        for layer in layers:
+            if getattr(layer, "_steering_installed", False):
+                continue
+            original = layer.forward
+
+            def forward_hook(*args, _original=original, _layer=layer, **kwargs):
+                outputs = _original(*args, **kwargs)
+                vec = _layer._steering_vec
+                if vec is None:
+                    return outputs
+                # vLLM layers return (hidden_states, residual); the residual stream is their sum,
+                # so adding to hidden_states shifts the stream.
+                if isinstance(outputs, (tuple, list)):
+                    return (outputs[0] + vec,) + tuple(outputs[1:])
+                return outputs + vec
+
+            layer.forward = forward_hook
+            layer._steering_installed = True
+            layer._steering_vec = None
+        return len(layers)
+
+    def make_set_steering(directions, layer_start, layer_end):
+        """directions: [num_layers, hidden_size], already scaled by the strength (None = steering off)"""
+        def set_steering(model):
+            layers = get_model_layers(model)
+            for idx, layer in enumerate(layers):
+                if directions is not None and layer_start <= idx < layer_end:
+                    p = next(layer.parameters())
+                    layer._steering_vec = directions[idx].to(device=p.device, dtype=p.dtype)
+                else:
+                    layer._steering_vec = None
+            return sum(layer._steering_vec is not None for layer in layers)
+        return set_steering
+
+    return install_hooks, make_set_steering
 
 
-def load_mean_activations(data_dir, languages):
-    """Load per-language mean activation tensors saved by diffmean.py."""
-    means = {}
+def load_steering_vectors(steering_dir, languages):
+    """Load mean activations (saved by diffmean.py) for specified languages
+
+    Args:
+        steering_dir: Directory containing mean.{lang}.pt files
+        languages: List of 2-letter language codes
+
+    Returns:
+        Dictionary mapping language codes to tensors of shape [num_layers, hidden_size]
+    """
+    steering_data = {}
 
     for lang in languages:
-        path = data_dir / f"mean.{lang}.pt"
+        filepath = os.path.join(steering_dir, f"mean.{lang}.pt")
 
-        if not path.exists():
-            raise FileNotFoundError(
-                f"Missing mean activation file: {path}\n"
-                "Run steering/diffmean.py for this language first."
-            )
+        if not os.path.exists(filepath):
+            raise FileNotFoundError(f"Steering vector file not found for '{lang}': looked for {filepath}")
 
-        data = torch.load(path, map_location="cpu", weights_only=False)
+        data = torch.load(filepath, map_location='cpu', weights_only=False)
+        steering_data[lang] = data['steering_vectors'].float()
+        print(f"Loaded steering vectors for {lang}: {data['steering_vectors'].shape}")
 
-        if "steering_vectors" not in data:
-            raise KeyError(f"'steering_vectors' missing in {path}")
-
-        means[lang] = data["steering_vectors"].float()
-
-        print(f"Loaded {lang}: {tuple(means[lang].shape)}")
-
-    # All languages must have matching layer and hidden dimensions.
-    shapes = {tuple(t.shape) for t in means.values()}
-    if len(shapes) != 1:
-        raise ValueError(f"Incompatible mean activation shapes: {shapes}")
-
-    return means
+    return steering_data
 
 
-def get_steering_difference(means, source_lang, target_lang):
-    """Compute target mean minus source mean for every layer."""
-    if source_lang not in means:
-        raise KeyError(f"No mean activations for source language {source_lang}")
-    if target_lang not in means:
-        raise KeyError(f"No mean activations for target language {target_lang}")
-
-    return means[target_lang] - means[source_lang]
+def create_chat_messages(prompts):
+    """Create simple chat messages for steering experiments"""
+    return [[{"role": "user", "content": prompt}] for prompt in prompts]
 
 
-def make_steering_hook(vector, strength):
-    """
-    Add one layer's steering vector to the layer output.
+def run_steering_experiment(model, sampling_params, test_questions, source_lang, target_lang,
+                            steering_data, steering_strength, layer_start, layer_end,
+                            make_set_steering, model_name):
+    """Run a single steering experiment"""
 
-    The vector changes output_hidden_states while preserving output_residual.
-    This is intended for architectures where the residual stream is the sum
-    of those two returned tensors.
-    """
-    def forward_hook(self, positions, hidden_states, residual):
-        output_hidden_states, output_residual = self._original_forward(
-            positions, hidden_states, residual
-        )
+    print(f"\n{'='*60}")
+    print(f"Steering Experiment: {source_lang} → {target_lang}")
+    print(f"Steering strength: {steering_strength}")
+    print(f"{'='*60}")
 
-        direction = vector.to(
-            device=output_hidden_states.device,
-            dtype=output_hidden_states.dtype,
-        )
-        direction = direction / direction.norm().clamp_min(1e-8)
+    assert source_lang in steering_data, f"Source language {source_lang} not in steering_data!"
+    assert target_lang in steering_data, f"Target language {target_lang} not in steering_data!"
 
-        output_hidden_states = (
-            output_hidden_states
-            + strength * direction
-        )
+    if source_lang not in test_questions:
+        print(f"Warning: No test questions found for {source_lang}")
+        print(f"Available languages in test_questions: {list(test_questions.keys())}")
+        return None
 
-        return output_hidden_states, output_residual
+    # Compute difference in means: target - source
+    steering_diff = steering_data[target_lang] - steering_data[source_lang]
+    print(f"Steering diff shape: {steering_diff.shape}")
 
-    return forward_hook
+    # Unit-length direction per layer, scaled by the strength
+    directions = torch.nn.functional.normalize(steering_diff, dim=-1) * steering_strength
 
+    # Apply steering inside the workers
+    active = model.apply_model(make_set_steering(directions, layer_start, layer_end))
+    print(f"Steered layers per worker: {active}")
 
-def apply_steering(model, diff, strength, layer_start=0, layer_end=None):
-    layers = get_model_layers(model)
-
-    if diff.ndim != 2:
-        raise ValueError(f"Expected [layers, hidden_size], got {diff.shape}")
-
-    if len(layers) != diff.shape[0]:
-        raise ValueError(
-            f"Model has {len(layers)} layers, but vector has "
-            f"{diff.shape[0]} layers. Check model/vector compatibility."
-        )
-
-    if layer_end is None:
-        layer_end = len(layers)
-
-    if not (0 <= layer_start < layer_end <= len(layers)):
-        raise ValueError(
-            f"Invalid layer range [{layer_start}, {layer_end}) "
-            f"for {len(layers)} layers."
-        )
-
-    originals = []
+    test_prompts = test_questions[source_lang]
+    messages_batch = create_chat_messages(test_prompts)
+    print(f"Running batched inference on {len(messages_batch)} questions...")
 
     try:
-        for idx in range(layer_start, layer_end):
-            layer = layers[idx]
-            original = layer.forward
-            originals.append((layer, original))
-
-            layer._original_forward = original
-            layer.forward = MethodType(
-                make_steering_hook(diff[idx], strength),
-                layer,
-            )
-    except Exception:
-        restore_steering(originals)
-        raise
-
-    return originals
-
-
-def restore_steering(originals):
-    for layer, original in reversed(originals):
-        layer.forward = original
-        if hasattr(layer, "_original_forward"):
-            delattr(layer, "_original_forward")
-
-
-def run_experiment(
-    model,
-    sampling_params,
-    questions,
-    means,
-    source_lang,
-    target_lang,
-    strength,
-    layer_start,
-    layer_end,
-):
-    print(f"\n{source_lang} -> {target_lang} | strength={strength}")
-
-    if source_lang not in questions:
-        raise KeyError(f"No validation questions for {source_lang}")
-
-    diff = get_steering_difference(means, source_lang, target_lang)
-    print(f"DiffMean shape: {tuple(diff.shape)}")
-
-    originals = apply_steering(
-        model,
-        diff,
-        strength,
-        layer_start,
-        layer_end,
-    )
-
-    try:
-        prompts = questions[source_lang]
-        messages = [
-            [{"role": "user", "content": prompt}]
-            for prompt in prompts
-        ]
-
-        outputs = model.chat(
-            messages,
-            sampling_params=sampling_params,
-        )
-
-        results = []
-        for idx, (output, prompt) in enumerate(zip(outputs, prompts)):
-            response = output.outputs[0].text.strip()
-
-            results.append({
-                "question_idx": idx,
-                "input": prompt,
-                "output": response,
-            })
-
-            if idx < 3:
-                print(f"Q{idx + 1}: {prompt[:100]}")
-                print(f"A{idx + 1}: {response[:150]}\n")
-
+        # Generate all responses in one batch using chat format
+        outputs = model.chat(messages_batch, sampling_params=sampling_params)
     finally:
-        restore_steering(originals)
+        # Switch steering off again
+        model.apply_model(make_set_steering(None, 0, 0))
 
-    return {
+    # Process results
+    all_results = []
+    for i, (output, original_prompt) in enumerate(zip(outputs, test_prompts)):
+        response = output.outputs[0].text.strip()
+
+        all_results.append({
+            "question_idx": i,
+            "input": original_prompt,
+            "output": response
+        })
+
+        if i < 3:  # Print first 3 for verification
+            print(f"Q{i+1}: {original_prompt[:50]}...")
+            print(f"R{i+1}: {response[:100]}...\n")
+
+    results = {
         "source_language": source_lang,
         "target_language": target_lang,
-        "steering_method": "DiffMean",
-        "steering_strength": strength,
-        "layer_start": layer_start,
-        "layer_end": layer_end,
-        "model": args.model,
-        "results": results,
+        "steering_strength": steering_strength,
+        "layer_range": f"{layer_start}-{layer_end - 1}",
+        "model": model_name,
+        "results": all_results
     }
 
+    return results
 
-def save_results(result, output_dir):
-    strength = str(result["steering_strength"]).replace(".", "_")
-    destination = output_dir / f"strength_{strength}"
-    destination.mkdir(parents=True, exist_ok=True)
 
-    filename = (
-        f"{result['source_language']}_to_"
-        f"{result['target_language']}.json"
-    )
-    path = destination / filename
+def check_experiment_exists(source_lang, target_lang, output_dir, steering_strength):
+    """Check if experiment results already exist"""
+    strength_str = f"strength_{steering_strength}".replace('.', '_')
+    output_subdir = os.path.join(output_dir, strength_str)
+    output_file = os.path.join(output_subdir, f"{source_lang}_to_{target_lang}.json")
+    return os.path.exists(output_file)
 
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f"Saved: {path}")
+def save_results(results, output_dir, steering_strength):
+    """Save experiment results to JSON file"""
+    strength_str = f"strength_{steering_strength}".replace('.', '_')
+    output_subdir = os.path.join(output_dir, strength_str)
+    os.makedirs(output_subdir, exist_ok=True)
+
+    source_lang = results["source_language"]
+    target_lang = results["target_language"]
+    output_file = os.path.join(output_subdir, f"{source_lang}_to_{target_lang}.json")
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=4, ensure_ascii=False)
+
+    print(f"Saved to: {output_file}")
 
 
 def main():
-    global args
-
-    parser = argparse.ArgumentParser(
-        description="Generate text using DiffMean language steering."
-    )
-    parser.add_argument(
-        "-m", "--model",
-        default="meta-llama/Llama-3.1-8B-Instruct",
-    )
-    parser.add_argument(
-        "--model_type",
-        choices=["llama", "aya"],
-        default="llama",
-        help="Select steering/data_llama or steering/data_aya.",
-    )
-    parser.add_argument("--source_lang", default="en")
-    parser.add_argument("--target_lang", default="fr")
-    parser.add_argument("--languages", nargs="+", default=None)
-    parser.add_argument("--batch_mode", action="store_true")
-    parser.add_argument("--steering_strength", type=float, default=1.0)
-    parser.add_argument("--layer_start", type=int, default=0)
-    parser.add_argument("--layer_end", type=int, default=None)
+    parser = argparse.ArgumentParser(description="Apply steering vectors to language models (vLLM)")
+    parser.add_argument("-m", "--model", type=str, default="meta-llama/Llama-3.1-8B-Instruct")
+    parser.add_argument("--steering_dir", type=str, default="data_llama",
+                        help="Directory containing mean.{lang}.pt files")
+    parser.add_argument("--output", type=str, default="steering_results")
+    parser.add_argument("--batch_mode", action='store_true', help="Run all language combinations")
+    parser.add_argument("--source_lang", type=str, default="en", help="Source language (2-letter code)")
+    parser.add_argument("--target_lang", type=str, default="fr", help="Target language (2-letter code)")
+    parser.add_argument("--pairs", nargs='+', default=None,
+                        help="Specific pairs to run, e.g. en:el en:mt")
+    parser.add_argument("--languages", nargs='+', default=None,
+                        help="Languages for --batch_mode (default: every mean.*.pt in steering_dir)")
+    parser.add_argument("--steering_strength", type=float, default=5.0,
+                        help="Scaling factor for steering vector (alpha)")
+    parser.add_argument("--layer_start", type=int, default=20,
+                        help="First layer to apply steering")
+    parser.add_argument("--layer_end", type=int, default=21,
+                        help="Last layer to apply steering (exclusive)")
+    parser.add_argument("--k_questions", type=int, default=70)
+    parser.add_argument("--max_new_tokens", type=int, default=512)
     parser.add_argument("--max_model_len", type=int, default=4096)
-    parser.add_argument("--gpu_memory_utilization", type=float, default=0.85)
-    parser.add_argument("--max_tokens", type=int, default=512)
-    parser.add_argument("--output", default="steering_results")
-    parser.add_argument("--skip_existing", action="store_true")
+    parser.add_argument("--gpu_memory_utilization", type=float, default=0.90)
+    parser.add_argument("--skip_existing", action='store_true',
+                        help="Skip experiments that already have results")
+
     args = parser.parse_args()
 
-    steering_dir = PROJECT_DIR / "steering"
-    data_dir = steering_dir / f"data_{args.model_type}"
-    output_dir = PROJECT_DIR / args.output
+    # Decide which language pairs to run
+    if args.pairs:
+        pairs = [tuple(p.split(":")) for p in args.pairs]
+    elif args.batch_mode:
+        languages = args.languages
+        if languages is None:
+            languages = sorted(f.split(".")[1] for f in os.listdir(args.steering_dir)
+                               if f.startswith("mean.") and f.endswith(".pt"))
+        pairs = [(s, t) for s in languages for t in languages if s != t]
+    else:
+        pairs = [(args.source_lang, args.target_lang)]
 
-    manifest_path = PROJECT_DIR / "data" / "manifest.json"
-    with manifest_path.open("r", encoding="utf-8") as f:
-        manifest = json.load(f)
+    languages_to_load = sorted({lang for pair in pairs for lang in pair})
+    print(f"Running {len(pairs)} pair(s). Loading steering vectors for: {languages_to_load}")
 
-    available_languages = list(manifest["languages"])
-    languages = args.languages or available_languages
+    steering_data = load_steering_vectors(args.steering_dir, languages_to_load)
+    test_questions = get_test_questions(k=args.k_questions)
 
-    unknown = sorted(set(languages) - set(available_languages))
-    if unknown:
-        raise ValueError(
-            f"Languages absent from manifest: {unknown}. "
-            f"Available: {available_languages}"
-        )
-
-    print(f"Project: {PROJECT_DIR}")
-    print(f"Mean activations: {data_dir}")
-    print(f"Validation data: {PROJECT_DIR / 'data' / 'validation'}")
-
-    means = load_mean_activations(data_dir, languages)
-    questions = get_test_questions(k=70)
-
-    # Keep only languages with validation questions.
-    missing_questions = [lang for lang in languages if lang not in questions]
-    if missing_questions:
-        raise ValueError(
-            f"No validation questions found for: {missing_questions}"
-        )
-
-    if torch.cuda.device_count() < 1:
-        raise RuntimeError("No CUDA GPU available.")
-
+    # Initialize model
     model = LLM(
         model=args.model,
         tensor_parallel_size=torch.cuda.device_count(),
         max_model_len=args.max_model_len,
         gpu_memory_utilization=args.gpu_memory_utilization,
         trust_remote_code=True,
-        enforce_eager=True,
-        dtype="float16",
-        enable_prefix_caching=False,
+        enforce_eager=True,              # needed so the patched forwards run in Python
+        dtype="float16",                 # T4 has no bfloat16
+        enable_prefix_caching=False,     # needed so cached KV is not reused across different steering
     )
 
+    # Wrap the decoder layers inside the workers (steering stays off for now)
+    install_hooks, make_set_steering = make_worker_functions()
+    print("Wrapped layers per worker:", model.apply_model(install_hooks))
+
+    # Get model-specific stop tokens
     tokenizer = model.get_tokenizer()
-    stop_ids = (
-        [tokenizer.eos_token_id]
-        if tokenizer.eos_token_id is not None
-        else None
-    )
+    stop_token_ids = []
+    if tokenizer.eos_token_id is not None:
+        stop_token_ids.append(tokenizer.eos_token_id)
+
+    print(f"Using stop tokens: {stop_token_ids}")
 
     sampling_params = SamplingParams(
         temperature=0.0,
-        max_tokens=args.max_tokens,
-        stop_token_ids=stop_ids,
-        skip_special_tokens=True,
+        max_tokens=args.max_new_tokens,
+        repetition_penalty=1.0,
+        stop_token_ids=stop_token_ids if stop_token_ids else None,
+        skip_special_tokens=True
     )
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"Applying steering to layers {args.layer_start} to {args.layer_end - 1}")
 
-    if args.batch_mode:
-        pairs = [
-            (source, target)
-            for source in languages
-            for target in languages
-            if source != target
-        ]
-    else:
-        pairs = [(args.source_lang, args.target_lang)]
-
-    for idx, (source, target) in enumerate(pairs, 1):
-        filename = (
-            f"strength_{str(args.steering_strength).replace('.', '_')}/"
-            f"{source}_to_{target}.json"
-        )
-        if args.skip_existing and (output_dir / filename).exists():
-            print(f"[{idx}/{len(pairs)}] Skipping existing {source}->{target}")
+    for counter, (source_lang, target_lang) in enumerate(pairs, 1):
+        if args.skip_existing and check_experiment_exists(
+            source_lang, target_lang, args.output, args.steering_strength
+        ):
+            print(f"[{counter}/{len(pairs)}] Skipping existing: {source_lang} → {target_lang}")
             continue
 
-        try:
-            result = run_experiment(
-                model,
-                sampling_params,
-                questions,
-                means,
-                source,
-                target,
-                args.steering_strength,
-                args.layer_start,
-                args.layer_end,
-            )
-            save_results(result, output_dir)
+        print(f"\n[{counter}/{len(pairs)}] Processing...")
 
-        except Exception as exc:
-            print(f"Failed {source}->{target}: {exc}")
+        try:
+            results = run_steering_experiment(
+                model, sampling_params, test_questions,
+                source_lang, target_lang,
+                steering_data, args.steering_strength,
+                args.layer_start, args.layer_end,
+                make_set_steering, args.model
+            )
+            if results is not None:
+                save_results(results, args.output, args.steering_strength)
+
+        except Exception as e:
+            print(f"Error in experiment {source_lang} → {target_lang}: {e}")
             import traceback
             traceback.print_exc()
+            continue
 
-    print("Generation complete.")
+    print("\nGeneration complete!")
 
 
 if __name__ == "__main__":
