@@ -308,7 +308,7 @@ def main():
         gpu_memory_utilization=args.gpu_memory_utilization,
         trust_remote_code=True,
         enforce_eager=True,
-        dtype="bfloat16",
+        dtype="float16",
         enable_prefix_caching=False,
     )
 
