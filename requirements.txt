@@ -1,0 +1,12 @@
+# data
+datasets>=2.19
+huggingface_hub>=0.23
+# baseline + judge inference
+vllm==0.10.1
+# transformers v5 removed all_special_tokens_extended, which vllm still calls
+transformers<5
+torch
+numpy==1.26.4
+# evaluation
+fasttext-wheel>=0.9.2
+accelerate>=1.14.0
