@@ -1,194 +1,141 @@
+"""Mean residual-stream activations per language (HF + forward hooks).
+
+Replaces the vLLM-internals version, which only works on the old V0 engine.
+Input : steering/data_{save}/flores_{lang}.pt   (1-D LongTensor of token ids)
+Output: steering/data_{save}/mean.{lang}.pt     (same keys as before)
+"""
 import argparse
-import os
 from pathlib import Path
-from types import MethodType
 
 import torch
-from vllm import LLM, SamplingParams
-from transformers import AutoTokenizer
+from transformers import AutoModelForCausalLM
+
+
+def find_layers(model):
+    for path in (
+        "model.layers",
+        "model.language_model.layers",
+        "model.language_model.model.layers",
+        "language_model.model.layers",
+    ):
+        obj = model
+        try:
+            for part in path.split("."):
+                obj = getattr(obj, part)
+            return obj
+        except AttributeError:
+            continue
+    raise RuntimeError("Could not find decoder layers for this architecture.")
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model", default="meta-llama/Llama-3.1-8B-Instruct")
     parser.add_argument(
-        "-m", "--model",
-        type=str,
-        default="meta-llama/Llama-3.1-8B-Instruct",
+        "-l", "--lang", nargs="+", default=["all"],
+        help="One or more language codes, or 'all' for every flores_*.pt found.",
     )
-    parser.add_argument("-l", "--lang", type=str, default="en")
-    parser.add_argument(
-        "-s", "--save",
-        type=str,
-        default="llama",
-        choices=["llama", "aya"],
-        help="Select the token data directory: data_llama or data_aya",
-    )
-    parser.add_argument(
-        "--target_tokens",
-        type=int,
-        default=10_000_000,
-    )
+    parser.add_argument("-s", "--save", default="llama", choices=["llama", "aya"])
+    parser.add_argument("--target_tokens", type=int, default=10_000_000)
+    parser.add_argument("--seq_len", type=int, default=1024)
+    parser.add_argument("--batch_size", type=int, default=4)
+    parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
-    steering_dir = Path(__file__).resolve().parent
-    data_dir = steering_dir / f"data_{args.save}"
+    data_dir = Path(__file__).resolve().parent / f"data_{args.save}"
 
-    input_path = data_dir / f"flores_{args.lang}.pt"
-    if not input_path.exists():
-        raise FileNotFoundError(f"Token file not found: {input_path}")
-
-    if torch.cuda.device_count() == 0:
-        raise RuntimeError("No CUDA GPU is available.")
-
-    print(f"Model: {args.model}")
-    print(f"Input: {input_path}")
-    print(f"Output directory: {data_dir}")
-
-    llm = LLM(
-        model=args.model,
-        tensor_parallel_size=torch.cuda.device_count(),
-        enforce_eager=True,
-    )
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.model,
-        use_fast=True,
-    )
-
-    hf_config = llm.llm_engine.model_config.hf_config
-    num_layers = hf_config.num_hidden_layers
-    hidden_size = hf_config.hidden_size
-    max_length = llm.llm_engine.model_config.max_model_len
-
-    # Find the underlying model and decoder layers.
-    worker = (
-        llm.llm_engine.model_executor
-        .driver_worker.model_runner.model
-    )
-
-    if "gemma-3" in args.model.lower():
-        layers = worker.model.language_model.model.layers
+    if args.lang == ["all"]:
+        langs = sorted(p.stem[len("flores_"):] for p in data_dir.glob("flores_*.pt"))
     else:
-        layers = worker.model.layers
+        langs = args.lang
+    if not langs:
+        raise FileNotFoundError(f"No flores_*.pt files found in {data_dir}")
 
+    todo = [
+        l for l in langs
+        if args.overwrite or not (data_dir / f"mean.{l}.pt").exists()
+    ]
+    print(f"Languages: {len(langs)} total, {len(todo)} to process")
+    if not todo:
+        return
+
+    print(f"Loading {args.model} (float16, device_map=auto)...")
+    model = AutoModelForCausalLM.from_pretrained(
+        args.model,
+        torch_dtype=torch.float16,   # T4 has no bfloat16
+        device_map="auto",
+        trust_remote_code=True,
+    )
+    model.eval()
+
+    layers = find_layers(model)
+    num_layers = model.config.get_text_config().num_hidden_layers
+    hidden_size = model.config.get_text_config().hidden_size
     if len(layers) != num_layers:
-        raise RuntimeError(
-            f"Found {len(layers)} layers, expected {num_layers}. "
-            "Check the model architecture before proceeding."
-        )
+        raise RuntimeError(f"Found {len(layers)} layers, expected {num_layers}.")
 
-    device = torch.device("cuda")
-    activation_sums = torch.zeros(
-        num_layers, hidden_size, dtype=torch.float32, device=device
-    )
-    token_counts = torch.zeros(
-        num_layers, dtype=torch.int64, device=device
-    )
+    sums = [None] * num_layers
 
-    def factory(idx):
-        def forward_hook(self, positions, hidden_states, residual):
-            output_hidden_states, output_residual = self._original_forward(
-                positions, hidden_states, residual
-            )
+    def make_hook(idx):
+        def hook(module, inputs, output):
+            # HF decoder layers return the full residual stream (a tensor in
+            # newer versions, a tuple in older ones). Works for Llama and Aya.
+            h = output[0] if isinstance(output, tuple) else output
+            h = h.detach().float().reshape(-1, h.shape[-1])
+            if sums[idx] is None:
+                sums[idx] = torch.zeros(hidden_size, dtype=torch.float32, device=h.device)
+            sums[idx] += h.sum(dim=0)
+        return hook
 
-            if "aya" in args.model.lower():
-                final_output = output_hidden_states
-            else:
-                final_output = output_hidden_states + output_residual
-
-            final_output = final_output.detach().float()
-
-            if final_output.dim() == 3:
-                activation_sums[idx] += final_output.sum(dim=(0, 1))
-                token_counts[idx] += (
-                    final_output.shape[0] * final_output.shape[1]
-                )
-            elif final_output.dim() == 2:
-                activation_sums[idx] += final_output.sum(dim=0)
-                token_counts[idx] += final_output.shape[0]
-            else:
-                raise RuntimeError(
-                    f"Unexpected activation shape: {final_output.shape}"
-                )
-
-            return output_hidden_states, output_residual
-
-        return forward_hook
-
-    for i, layer in enumerate(layers):
-        layer._original_forward = layer.forward
-        layer.forward = MethodType(factory(i), layer)
+    handles = [layer.register_forward_hook(make_hook(i)) for i, layer in enumerate(layers)]
+    first_device = next(model.parameters()).device
 
     try:
-        print(f"Loading token IDs from {input_path}")
-        token_ids = torch.load(input_path, map_location="cpu")
+        for lang in todo:
+            input_path = data_dir / f"flores_{lang}.pt"
+            if not input_path.exists():
+                print(f"✗ {lang}: {input_path} not found, skipping")
+                continue
 
-        if args.target_tokens > 0:
-            token_ids = token_ids[:args.target_tokens]
+            token_ids = torch.load(input_path, map_location="cpu")
+            if args.target_tokens > 0:
+                token_ids = token_ids[: args.target_tokens]
+            usable = (len(token_ids) // args.seq_len) * args.seq_len
+            if usable == 0:
+                print(f"✗ {lang}: only {len(token_ids)} tokens, need >= {args.seq_len}. "
+                      f"Lower --seq_len. Skipping")
+                continue
+            input_ids = token_ids[:usable].reshape(-1, args.seq_len)
+            print(f"{lang}: {len(token_ids):,} tokens -> {input_ids.size(0)} sequences "
+                  f"of {args.seq_len} ({usable:,} used)")
 
-        print(f"Loaded {len(token_ids):,} tokens")
+            for i in range(num_layers):
+                sums[i] = None
 
-        # Keep only complete sequences.
-        usable_tokens = (
-            len(token_ids) // max_length
-        ) * max_length
+            with torch.no_grad():
+                for start in range(0, input_ids.size(0), args.batch_size):
+                    batch = input_ids[start:start + args.batch_size].to(first_device)
+                    # base_model skips the LM head, so no huge logits tensor
+                    model.base_model(input_ids=batch, use_cache=False)
 
-        if usable_tokens == 0:
-            raise ValueError(
-                f"Only {len(token_ids)} tokens available, but "
-                f"model max length is {max_length}."
-            )
+            if any(s is None for s in sums):
+                raise RuntimeError("Some layers captured nothing; hooks did not fire.")
 
-        input_ids = token_ids[:usable_tokens].reshape(
-            -1, max_length
-        )
-
-        print(
-            f"Processing {input_ids.size(0)} sequences "
-            f"of length {max_length}"
-        )
-
-        sampling_params = SamplingParams(
-            max_tokens=1,
-            temperature=0,
-        )
-
-        # vLLM executes the model and triggers the patched forwards.
-        llm.generate(
-            prompt_token_ids=input_ids.tolist(),
-            sampling_params=sampling_params,
-        )
-
-        if torch.any(token_counts == 0):
-            raise RuntimeError(
-                "Some layers captured no activations. "
-                "Check the vLLM model path and forward hooks."
-            )
-
-        mean_activations = (
-            activation_sums / token_counts.unsqueeze(1).float()
-        )
-
-        result = {
-            "steering_vectors": mean_activations.cpu(),
-            "token_counts": token_counts.cpu(),
-            "num_tokens": usable_tokens,
-            "language": args.lang,
-            "model": args.model,
-            "method": "mean_activation",
-        }
-
-        output_path = data_dir / f"mean.{args.lang}.pt"
-        torch.save(result, output_path)
-
-        print(f"Saved mean activations to: {output_path}")
-        print(f"Tensor shape: {mean_activations.shape}")
-
+            mean_activations = torch.stack([s.cpu() / usable for s in sums])
+            result = {
+                "steering_vectors": mean_activations,  # [num_layers, hidden_size]
+                "token_counts": torch.full((num_layers,), usable, dtype=torch.int64),
+                "num_tokens": usable,
+                "language": lang,
+                "model": args.model,
+                "method": "mean_activation",
+            }
+            out_path = data_dir / f"mean.{lang}.pt"
+            torch.save(result, out_path)
+            print(f"✓ {lang}: saved {out_path.name} {tuple(mean_activations.shape)}")
     finally:
-        # Restore original layer forwards.
-        for layer in layers:
-            if hasattr(layer, "_original_forward"):
-                layer.forward = layer._original_forward
-                del layer._original_forward
+        for h in handles:
+            h.remove()
 
 
 if __name__ == "__main__":
