@@ -1,4 +1,5 @@
 import gc
+import math
 import os
 
 import gradio as gr
@@ -41,6 +42,9 @@ MODELS = {
         "steering_dir": "steering/data_aya",
     },
 }
+
+MODE_STATIC = "Static"
+MODE_DYNAMIC = "Dynamic (cosine decay)"
 
 # ============================================================================
 # Global state
@@ -128,44 +132,61 @@ def load_steering_vector(lang_code, model_name):
 
 
 # ============================================================================
-# Diffmean steering
+# Diffmean steering (static and dynamic)
 # ============================================================================
 
-def create_steering_hook(vec):
-    """Forward hook that adds a fixed vector to a decoder layer's output."""
-    def hook(module, inputs, output):
-        if isinstance(output, tuple):
-            return (output[0] + vec,) + tuple(output[1:])
-        return output + vec
-    return hook
+class DynamicController:
+    """Decides the steering strength at every generation step.
 
-
-def create_dynamic_diffmean_hook(source_direction, target_direction, scale=1.0):
+    - Prompt processing (prefill): start strength.
+    - Generated token t: cosine decay from start to end over `decay_tokens` tokens,
+      then end strength for the rest of the answer.
+    A static strength is the special case start == end.
     """
-    Dynamic, state-dependent DiffMean replacement.
 
-    For each token hidden state h:
-        h' = h + scale * (P_target(h) - P_source(h))
+    def __init__(self, start_strength, end_strength, decay_tokens):
+        self.start_strength = start_strength
+        self.end_strength = end_strength
+        self.decay_tokens = decay_tokens
+        self.step_idx = 0
 
-    P_direction(h) is the projection of the current hidden state onto that
-    language's normalized mean-activation direction. Unlike static DiffMean,
-    the amount removed/added changes with each token's current hidden state.
-    """
+    def reset(self):
+        self.step_idx = 0
+
+    def get_strength(self, is_prefill=False):
+        if is_prefill:
+            return self.start_strength
+
+        t = self.step_idx
+        if t >= self.decay_tokens:
+            return self.end_strength
+
+        factor = 0.5 * (1 + math.cos(math.pi * t / self.decay_tokens))
+        return self.end_strength + (self.start_strength - self.end_strength) * factor
+
+    def step(self):
+        self.step_idx += 1
+
+
+def create_dynamic_hook(v_unit, controller, is_last):
+    """Forward hook that adds strength(t) * unit vector to a decoder layer's output"""
     def hook(module, inputs, output):
-        hidden = output[0] if isinstance(output, tuple) else output
+        hs = output[0] if isinstance(output, tuple) else output
 
-        # Directions have shape [hidden_size]; hidden has shape
-        # [batch, sequence, hidden_size] (or compatible leading dimensions).
-        src_dir = source_direction.to(device=hidden.device, dtype=hidden.dtype)
-        tgt_dir = target_direction.to(device=hidden.device, dtype=hidden.dtype)
+        # Prompt pass has seq_len > 1; every generated token has seq_len == 1
+        is_prefill = hs.dim() == 3 and hs.size(1) > 1
+        strength = controller.get_strength(is_prefill=is_prefill)
 
-        source_component = torch.sum(hidden * src_dir, dim=-1, keepdim=True) * src_dir
-        target_component = torch.sum(hidden * tgt_dir, dim=-1, keepdim=True) * tgt_dir
-        steered = hidden + scale * (target_component - source_component)
+        if strength != 0:
+            hs = hs + strength * v_unit
+
+        # The last steered layer advances the token counter once per generated token
+        if is_last and not is_prefill:
+            controller.step()
 
         if isinstance(output, tuple):
-            return (steered,) + tuple(output[1:])
-        return steered
+            return (hs,) + tuple(output[1:])
+        return hs
     return hook
 
 
@@ -177,9 +198,8 @@ def remove_steering():
     active_hooks = []
 
 
-def apply_diffmean_steering(source_code, target_code, strength, layer_start, layer_end,
-                            steering_mode="Static DiffMean"):
-    """Apply static DiffMean or dynamic state-dependent source/target replacement."""
+def apply_diffmean_steering(source_code, target_code, controller, layer_start, layer_end):
+    """Add strength(t) * unit(mean[target] - mean[source]) to the chosen layers"""
     global active_hooks
 
     remove_steering()
@@ -191,49 +211,27 @@ def apply_diffmean_steering(source_code, target_code, strength, layer_start, lay
     if target_vec is None:
         return False, f"Steering vector not found for {target_code} ({current_model_name})"
 
+    steering_diff = target_vec - source_vec          # [num_layers, hidden_size]
+
     layers = get_model_layers(model)
-    if source_vec.shape[0] != len(layers) or target_vec.shape[0] != len(layers):
-        return False, (
-            f"Vector layer counts are source={source_vec.shape[0]}, target={target_vec.shape[0]}, "
-            f"but the model has {len(layers)} layers. Wrong steering folder for this model?"
-        )
+    if steering_diff.shape[0] != len(layers):
+        return False, (f"Vectors have {steering_diff.shape[0]} layers but the model has "
+                       f"{len(layers)}. Wrong steering folder for this model?")
 
     start = int(layer_start)
-    end = min(int(layer_end), len(layers) - 1)  # inclusive
-    if start < 0 or start > end:
-        return False, f"Invalid layer range: start={start}, end={end}"
+    end = min(int(layer_end), len(layers) - 1)       # inclusive
+    if start > end:
+        return False, f"Start layer ({start}) must not be after end layer ({end})"
 
     for layer_idx in range(start, end + 1):
+        v = steering_diff[layer_idx]
+        v_unit = v / v.norm(p=2).clamp_min(1e-8)
         p = next(layers[layer_idx].parameters())
-
-        if steering_mode == "Dynamic DiffMean":
-            # Normalize each language mean separately to define projection directions.
-            src_dir = source_vec[layer_idx]
-            tgt_dir = target_vec[layer_idx]
-            src_dir = src_dir / (src_dir.norm(p=2) + 1e-8)
-            tgt_dir = tgt_dir / (tgt_dir.norm(p=2) + 1e-8)
-
-            # Keep the existing GUI strength scale intuitive: strength=5.0
-            # corresponds to scale=1.0 in h' = h + scale*(P_t(h)-P_s(h)).
-            scale = float(strength) / 5.0
-            hook = create_dynamic_diffmean_hook(
-                src_dir.to(device=p.device, dtype=p.dtype),
-                tgt_dir.to(device=p.device, dtype=p.dtype),
-                scale=scale,
-            )
-        else:
-            # Original static DiffMean behavior: normalized target-minus-source mean.
-            v = target_vec[layer_idx] - source_vec[layer_idx]
-            v = v / (v.norm(p=2) + 1e-8)
-            vec = (float(strength) * v).to(device=p.device, dtype=p.dtype)
-            hook = create_steering_hook(vec)
-
+        v_unit = v_unit.to(device=p.device, dtype=p.dtype)
+        hook = create_dynamic_hook(v_unit, controller, is_last=(layer_idx == end))
         active_hooks.append(layers[layer_idx].register_forward_hook(hook))
 
-    return True, (
-        f"✓ {steering_mode}: {source_code} → {target_code} "
-        f"(strength={strength}, layers={start}-{end})"
-    )
+    return True, f"{source_code} → {target_code}, layers {start}-{end}"
 
 
 # ============================================================================
@@ -241,7 +239,10 @@ def apply_diffmean_steering(source_code, target_code, strength, layer_start, lay
 # ============================================================================
 
 def generate_response(prompt, model_choice, source_lang, target_lang,
-                      steering_mode, strength, layer_start, layer_end, max_tokens, temperature):
+                      steering_mode, static_strength,
+                      start_strength, end_strength, decay_tokens,
+                      layer_start, layer_end,
+                      max_tokens, temperature, repetition_penalty):
     """Generate a response with optional steering"""
     if model is None:
         return "⚠️ Please load a model first!"
@@ -255,10 +256,18 @@ def generate_response(prompt, model_choice, source_lang, target_lang,
 
     status_msg = ""
     if source_code != target_code:
-        success, status_msg = apply_diffmean_steering(
-            source_code, target_code, strength, layer_start, layer_end, steering_mode)
+        if steering_mode == MODE_DYNAMIC:
+            controller = DynamicController(float(start_strength), float(end_strength), int(decay_tokens))
+            schedule = f"dynamic {start_strength} → {end_strength} over {int(decay_tokens)} tokens"
+        else:
+            controller = DynamicController(float(static_strength), float(static_strength), 1)
+            schedule = f"static {static_strength}"
+
+        success, info = apply_diffmean_steering(
+            source_code, target_code, controller, layer_start, layer_end)
         if not success:
-            return f"⚠️ {status_msg}"
+            return f"⚠️ {info}"
+        status_msg = f"✓ DiffMean ({schedule}): {info}"
 
     try:
         messages = [{"role": "user", "content": prompt}]
@@ -276,6 +285,8 @@ def generate_response(prompt, model_choice, source_lang, target_lang,
             gen_kwargs.update(do_sample=True, temperature=float(temperature))
         else:
             gen_kwargs.update(do_sample=False, temperature=None, top_p=None)   # greedy, like the benchmark
+        if repetition_penalty and float(repetition_penalty) != 1.0:
+            gen_kwargs["repetition_penalty"] = float(repetition_penalty)
 
         with torch.no_grad():
             outputs = model.generate(**inputs, **gen_kwargs)
@@ -402,22 +413,41 @@ def create_interface():
 
             with gr.Column(scale=2):
                 target_lang = gr.Dropdown(
-                    choices=names, value="Greek" if "Greek" in names else names[-1],
+                    choices=names, value="Maltese" if "Maltese" in names else names[-1],
                     label="📥 Target Language", info="Desired response language")
 
         # DiffMean parameters
         with gr.Group(elem_classes="params-panel"):
             gr.Markdown("### ⚡ DiffMean Parameters")
-            steering_mode = gr.Dropdown(
-                choices=["Static DiffMean", "Dynamic DiffMean"],
-                value="Static DiffMean",
-                label="Steering Mode",
-                info="Static adds a fixed mean-difference direction; Dynamic replaces source/target components of each current token state.")
-            diffmean_strength = gr.Slider(
-                minimum=0.0, maximum=20.0, value=5.0, step=0.5,
-                label="Steering Strength",
-                info="Added vector has unit length x this value. Higher = stronger language shift, "
-                     "but too high breaks fluency")
+
+            steering_mode = gr.Radio(
+                choices=[MODE_STATIC, MODE_DYNAMIC], value=MODE_DYNAMIC,
+                label="Steering mode",
+                info="Static: one constant strength. Dynamic: strong at the start of the answer, "
+                     "then decays to a lower strength")
+
+            with gr.Group(visible=False) as static_group:
+                static_strength = gr.Slider(
+                    minimum=0.0, maximum=20.0, value=5.0, step=0.5,
+                    label="Steering Strength",
+                    info="Added vector has unit length x this value")
+
+            with gr.Group(visible=True) as dynamic_group:
+                with gr.Row():
+                    start_strength = gr.Slider(
+                        minimum=0.0, maximum=20.0, value=10.0, step=0.5,
+                        label="Starting Strength",
+                        info="Used for the prompt and the first generated token")
+                    end_strength = gr.Slider(
+                        minimum=0.0, maximum=20.0, value=5.0, step=0.5,
+                        label="Ending Strength",
+                        info="Strength once the decay is finished")
+                decay_tokens = gr.Slider(
+                    minimum=1, maximum=512, value=50, step=1,
+                    label="Decay Tokens",
+                    info="Number of generated tokens over which the strength decays (cosine curve) "
+                         "from start to end")
+
             with gr.Row():
                 layer_start = gr.Slider(
                     minimum=0, maximum=31, value=20, step=1,
@@ -434,6 +464,9 @@ def create_interface():
             temperature = gr.Slider(
                 minimum=0.0, maximum=1.5, value=0.0, step=0.1,
                 label="🌡️ Temperature", info="0 = greedy (deterministic, as in the benchmark)")
+            repetition_penalty = gr.Slider(
+                minimum=1.0, maximum=1.5, value=1.0, step=0.05,
+                label="🔁 Repetition Penalty", info="1.0 = off (your dynamic script used 1.15)")
 
         # Input / output
         prompt = gr.Textbox(label="💬 Your Prompt", placeholder="Enter your message here...", lines=3)
@@ -441,13 +474,19 @@ def create_interface():
         output = gr.Textbox(label="🤖 Response", lines=10, elem_classes="output-box")
 
         all_inputs = [prompt, model_choice, source_lang, target_lang,
-                      steering_mode, diffmean_strength, layer_start, layer_end, max_tokens, temperature]
+                      steering_mode, static_strength,
+                      start_strength, end_strength, decay_tokens,
+                      layer_start, layer_end,
+                      max_tokens, temperature, repetition_penalty]
 
         gr.Examples(
             examples=[
-                ["What is the capital of France?", "Llama-3.1-8B-Instruct", "English", "Greek", "Static DiffMean", 5.0, 20, 20, 256, 0.0],
-                ["Explain quantum computing in simple terms.", "Llama-3.1-8B-Instruct", "English", "Turkish", "Dynamic DiffMean", 5.0, 20, 20, 256, 0.0],
-                ["How can I improve my time management skills?", "Llama-3.1-8B-Instruct", "English", "Maltese", "Dynamic DiffMean", 5.0, 20, 20, 256, 0.0],
+                ["What is the capital of France?", "Llama-3.1-8B-Instruct", "English", "Maltese",
+                 MODE_DYNAMIC, 5.0, 10.0, 5.0, 50, 20, 20, 256, 0.0, 1.15],
+                ["Explain quantum computing in simple terms.", "Llama-3.1-8B-Instruct", "English", "Greek",
+                 MODE_STATIC, 5.0, 10.0, 5.0, 50, 20, 20, 256, 0.0, 1.0],
+                ["How can I improve my time management skills?", "Llama-3.1-8B-Instruct", "English", "Turkish",
+                 MODE_DYNAMIC, 5.0, 10.0, 5.0, 50, 20, 20, 256, 0.0, 1.0],
             ],
             inputs=all_inputs,
         )
@@ -459,6 +498,14 @@ def create_interface():
                 <p><b>DiffMean:</b> adds the (target − source) mean-activation direction to the hidden states</p>
             </div>
         """)
+
+        # Show only the sliders of the selected mode
+        def toggle_mode(mode):
+            return (gr.update(visible=(mode == MODE_STATIC)),
+                    gr.update(visible=(mode == MODE_DYNAMIC)))
+
+        steering_mode.change(fn=toggle_mode, inputs=[steering_mode],
+                             outputs=[static_group, dynamic_group])
 
         # Event handlers
         load_btn.click(
