@@ -44,7 +44,18 @@ def main():
         p.error(f'Layer indices must be in [0, {len(layers)-1}]')
     # The same neutral context for every language; no target-language instruction.
     prefix = tokenizer.apply_chat_template(
-        [{'role': 'user', 'content': 'Continue.'}], tokenize=True, add_generation_prompt=True)
+        [{'role': 'user', 'content': 'Continue.'}], tokenize=True,
+        add_generation_prompt=True, return_dict=False)
+    # Transformers 5.x can return BatchEncoding by default. Keep the prefix a
+    # flat token list across tokenizer versions and custom chat templates.
+    if hasattr(prefix, 'keys'):
+        prefix = prefix['input_ids']
+    if hasattr(prefix, 'tolist'):
+        prefix = prefix.tolist()
+    if prefix and isinstance(prefix[0], list):
+        if len(prefix) != 1:
+            raise ValueError('Expected one neutral-context token sequence')
+        prefix = prefix[0]
     if len(prefix) >= a.max_length:
         p.error('max-length too short for the neutral assistant prefix')
     pooled, mask, handles = {}, None, []
