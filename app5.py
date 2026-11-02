@@ -191,10 +191,12 @@ def apply_steering(source_code, target_code, mode, strength, beta, gamma,
         detail = f"Original diffmean, alpha={strength:g}"
     else:
         center, count = load_global_mean(current_model_name)
-        # Deliberately do NOT normalize either component or the resulting edit.
-        # beta=gamma=k gives exactly k * (target-source).
-        delta = -float(beta) * (source - center) + float(gamma) * (target - center)
-        detail = (f"Centered steering, beta={beta:g}, gamma={gamma:g}; "
+        # Normalize after combining: beta:gamma controls direction, alpha magnitude.
+        # Equal positive beta/gamma reproduces original normalized diffmean.
+        direction = -float(beta) * (source - center) + float(gamma) * (target - center)
+        delta = float(strength) * direction / direction.norm(
+            dim=-1, keepdim=True).clamp_min(1e-8)
+        detail = (f"Centered steering, alpha={strength:g}, beta={beta:g}, gamma={gamma:g}; "
                   f"global mean over {count} languages")
     norms = []
     for idx in range(start, end + 1):
