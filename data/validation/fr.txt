@@ -1,0 +1,70 @@
+Comment puis-je améliorer mes compétences en gestion du temps?
+Quels sont les moyens les plus efficaces de gérer le stress?
+Quelles sont les principales différences entre les langages de programmation Python et JavaScript?
+Comment puis-je augmenter ma productivité tout en travaillant à la maison?
+Pouvez-vous expliquer les bases de l'informatique quantique?
+Quelles sont les différences entre les sources de protéines à base de plantes et d'animaux?
+Comment puis-je développer mes compétences de pensée critique?
+Quels sont les principaux défis rencontrés dans le secteur de l'éducation aujourdhui?
+Quels sont les principaux facteurs qui influencent le comportement des consommateurs?
+Quelles sont les stratégies les plus efficaces pour la résolution des conflits sur le lieu de travail?
+Quelles sont les implications potentielles de l'utilisation dune bouteille en plastique à usage unique par rapport à une bouteille réutilisable sur l'environnement et la santé humaine?
+Quels facteurs prendreriez-vous en compte lors de la conception dun système de transport public inclusif et accessible?
+Comment les gouvernements peuvent-ils utiliser des politiques budgétaires et monétaires pour lutter contre les récessions économiques?
+Comment les obstacles linguistiques et culturels affectent-ils la façon dont les gens communiquent et nouent les relations dans les sociétés multiculturelles?
+Décrivez un scénario où lintelligence artificielle pourrait être utilisée pour améliorer la qualité et l'efficacité de la prestation des soins de santé.
+Expliquez le processus dédition de gènes à laide de la technologie CRISPR-CAS9 et discutez de ses applications potentielles et des implications éthiques.
+Comment les vaccinations fonctionnent-elles pour protéger les individus et les communautés contre les maladies infectieuses, et quelle est l'immunité du troupeau?
+Comment les plateformes de médias sociaux influencent-elles la façon dont les gens consomment et partagent des nouvelles, et quelles sont les implications potentielles pour la propagation de la désinformation?
+Comment les facteurs culturels, sociaux et économiques influencent-ils les choix alimentaires des gens et comment ces connaissances peuvent-elles être utilisées pour promouvoir des régimes alimentaires plus sains?
+Expliquez le processus de sélection naturelle et comment il contribue à l'évolution et à l'adaptation des espèces.
+Comment vous présenteriez-vous en tant que chevalier médiéval dans un banquet royal?
+En tant que capitaine de pirate, que diriez-vous à votre équipage pour les motiver à rechercher un trésor caché?
+Si vous étiez un personnage shakespearien, comment déclareriez-vous votre amour pour quelquun dans un soliloque?
+En tant que super-héros, comment expliqueriez-vous votre histoire d'origine à un enfant curieux?
+Imaginez que vous êtes un voyageur dans le temps de lan 3000. De quelles progrès technologiques pourriez-vous parler aux gens?
+En tant que commentateur sportif, décrivez le jeu gagnant dans les dernières secondes d'un match de championnat.
+Faites semblant dêtre un chef de renommée mondiale. Comment décririez-vous votre plat vedette à un panel de juges?
+Vous êtes un alpiniste atteignant le sommet du mont Everest. Décrivez vos émotions et la vue du haut.
+En tant que colon spatial sur Mars, décrivez votre vie quotidienne et les défis auxquels vous êtes confronté sur une autre planète.
+Faites semblant dêtre un personnage dans un monde post-apocalyptique. Décrivez comment vous survivez et les alliés que vous rencontrez.
+Comment pouvez-vous déterminer si un restaurant est populaire parmi les riverains ou attire principalement les touristes, et pourquoi ces informations pourraient-elles être utiles?
+Quels sont les indices subtils qui suggèrent que quelqu'un prétend comprendre un sujet ou une conversation alors qu'il est en fait confus ou non informé?
+Pourquoi quelqu'un choisirrait-il d'utiliser une carte papier ou de demander des instructions au lieu de compter sur un appareil GPS ou une application pour smartphone?
+Comment pouvez-vous déterminer si une personne s'intéresse vraiment à une conversation ou est simplement polie?
+Pourquoi quelqu'un préférerait-il acheter dans une petite entreprise locale au lieu d'un grand magasin de chaînes, même si les prix sont plus élevés?
+Comment pouvez-vous évaluer la crédibilité d'une source dinformations, comme un article de presse ou un article de blog, sans s'appuyer uniquement sur la réputation de l'auteur ou de l'éditeur?
+Pourquoi certaines personnes apprécient-elles la sensation d'avoir peur, comme en regardant des films d'horreur ou en faisant des tours de montagnes russes, tandis que d'autres évitent ces expériences?
+Comment l'observation du comportement d'autres personnes dans une situation sociale peut-elle fournir des indices sur les normes et les attentes culturelles?
+Avons-nous l'obligation morale d'explorer l'espace, ou devrions-nous nous concentrer d'abord sur la résolution des problèmes de la Terre?
+Dans un monde où l'automatisation devient de plus en plus répandue, est-il plus important de prioriser la création d'emplois ou les progrès technologiques?
+Combien de fois en moyenne l'homme cligne-t-il des yeux dans une vie? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien d'atomes y a-t-il dans un grain de sel? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de coups de foudre tombent sur Terre chaque jour? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de ballons faudrait-il pour soulever une maison comme dans le film "Là-haut"? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de SMS sont envoyés dans le monde en une minute? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de mots sont prononcés quotidiennement sur Terre? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de flocons de neige tombent pendant un hiver typique? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de pages y a-t-il dans tous les livres jamais écrits? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de fois la Terre a-t-elle orbité le soleil depuis le début de la vie? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Combien de chansons ont été enregistrées à travers l'histoire? Essayez d'expliquer votre réponse. Votre explication devrait montrer votre raisonnement au lecteur étape par étape.
+Et si Internet avait été inventé pendant la période de la Renaissance?
+Et si les Aztèques avaient réussi à repousser les conquistadors espagnols?
+Et si la peste noire n'avait pas eu lieu au 14ème siècle?
+Et si Isaac Newton s'était concentré sur la biologie au lieu de la physique?
+Et si les Beatles n'avaient jamais formé leur groupe?
+Et si Alan Turing n'avait pas craqué le code Enigma pendant la Seconde Guerre mondiale?
+Et si le canal de Suez n'avait jamais été construit?
+Et si la civilisation maya ne s'était jamais effondrée mystérieusement?
+Et si Christophe Columb n'avait pas découvert les Amériques?
+Et si Vincent Van Gogh avait été un artiste prospère au cours de son vivant?
+Pouvez-vous m'aider à écrire un e-mail officiel à un partenaire commercial potentiel proposant une coentreprise?
+Pouvez-vous m'aider à rédiger une lettre de démission à mon employeur actuel, tout partant en bons termes et en exprimant ma gratitude pour les opportunités offertes?
+Utilisez un format approprié pour structurer une lettre de recommandation formelle pour un étudiant postulant à un prestigieux programme d'études supérieures en informatique.
+Écrivez un e-mail de lancement de produit convaincant pour informer nos clients de notre nouvelle solution logicielle.
+Rédiger un e-mail d'excuses à un client qui a connu un retard dans sa commande et rassurer que le problème a été résolu.
+Écrivez un script pour une vidéo YouTube explorant l'histoire et la signification culturelle du jazz.
+Composez un article de blog de voyage traitant d'un récent voyage à Hawaï, mettant en évidence les expériences culturelles et les attractions incontournables.
+Écrivez une critique de film captivante pour un film de science-fiction récemment publié, discutant de son intrigue, de ses personnages et de ses effets spéciaux.
+Structurez un script de podcast pour un épisode discutant de l'influence des plateformes de streaming sur l'industrie musicale.
+Écrivez une revue de concert symphonique, en discutant de la performance de l'orchestre et de l'expérience globale du public.

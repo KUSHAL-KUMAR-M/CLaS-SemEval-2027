@@ -1,0 +1,70 @@
+Ako môžem zlepšit svoje zručnosti týkajúce sa časového manažmentu?
+Aké sú najúčinnejšie spôsoby zvládania stresu?
+Aké sú hlavné rozdiely medzi programovacími jazykmi Python a JavaScript?
+Ako môžem zvýšiť svoju produktivitu pri práci z domu?
+Môžete vysvetliť základy kvantového počítania?
+Aké sú rozdiely medzi rastlinnými a živočíšnymi zdrojmi bielkovín?
+Ako môžem rozvíjať svoje schopnosti kritického myslenia?
+Aké sú hlavné výzvy, ktorým v súčasnosti čelí vzdelávací sektor?
+Aké sú hlavné faktory, ktoré ovplyvňujú správanie spotrebiteľov?
+Aké sú najúčinnejšie stratégie riešenia konfliktov na pracovisku?
+Aké sú potenciálne dôsledky používania jednorazovej plastovej fľaše v porovnaní s fľašou na opakované použitie na životné prostredie a ľudské zdravie?
+Aké faktory by ste zvážili pri navrhovaní inkluzívneho a prístupného systému verejnej dopravy?
+Ako môžu vlády využiť fiškálnu a menovú politiku na boj proti hospodárskej recesii?
+Ako jazykové a kultúrne bariéry ovplyvňujú spôsob, akým ľudia komunikujú a vytvárajú vzťahy v multikultúrnych spoločnostiach?
+Opíšte scenár, v ktorom by sa umelá inteligencia mohla použiť na zlepšenie kvality a efektívnosti poskytovania zdravotnej starostlivosti.
+Vysvetlite proces úpravy génov pomocou technológie CRISPR-Cas9 a prediskutujte jej potenciálne aplikácie a etické dôsledky.
+Ako funguje očkovanie na ochranu jednotlivcov a komunít pred infekčnými chorobami a čo je kolektívna imunita?
+Ako platformy sociálnych médií ovplyvňujú spôsob, akým ľudia konzumujú a zdieľajú správy, a aké sú potenciálne dôsledky pre šírenie dezinformácií?
+Ako kultúrne, sociálne a ekonomické faktory ovplyvňujú výber potravín u ľudí a ako možno tieto poznatky využiť na podporu zdravšej stravy?
+Vysvetlite proces prirodzeného výberu a ako prispieva k evolúcii a adaptácii druhov.
+Ako by ste sa predstavili ako stredoveký rytier na kráľovskej hostine?
+Čo by ste ako kapitán pirátov odkázali svojej posádke, aby ste ich motivovali k hľadaniu skrytého pokladu?
+Ak by ste boli Shakespearovskou postavou, ako by ste niekomu vyjadrili lásku v monológu?
+Ako by ste ako superhrdina vysvetlili svoj príbeh o pôvode zvedavému dieťaťu?
+Predstavte si, že ste cestovateľom v čase z roku 3000. O akých technologických pokrokoch by ste ľuďom hovorili?
+Ako športový komentátor opíšte víťaznú hru v posledných sekundách majstrovského zápasu.
+Predstavte si, že ste svetoznámy šéfkuchár. Ako by ste opísali svoje typické jedlo pred porotou?
+Ste horolezec, ktorý má na dosah vrchol Mount Everestu. Opíšte svoje emócie a pohľad zhora.
+Ako vesmírny kolonista na Marse opíšte svoj každodenný život a výzvy, ktorým čelíte, keď žijete na inej planéte.
+Predstavte si, že ste postava v postapokalyptickom svete. Opíšte, ako prežívate, a opíšte spojencov, ktorých stretnete.
+Ako môžete určiť, či je reštaurácia obľúbená medzi miestnymi obyvateľmi alebo či priťahuje najmä turistov, a prečo môžu byť tieto informácie užitočné?
+Aké sú niektoré jemné náznaky toho, že niekto predstiera, že rozumie téme alebo konverzácii, keď je v skutočnosti zmätený alebo neinformovaný?
+Prečo by sa niekto mohol rozhodnúť použiť papierovú mapu alebo požiadať o trasu namiesto toho, aby sa spoliehal na zariadenie GPS alebo aplikáciu pre smartfóny?
+Ako môžete zistiť, či človek javí skutočný záujem o konverzáciu alebo či je iba zdvorilý?
+Prečo by niekto mohol chcieť radšej nakupovať v malom miestnom podniku a nie vo veľkom obchodnom reťazci, aj keď sú ceny vyššie?
+Ako môžete posúdiť dôveryhodnosť zdroja informácií, napríklad spravodajského článku alebo príspevku na blogu, bez toho, aby ste sa spoliehali len na povesť autora alebo vydavateľa?
+Prečo si niektorí ľudia užívajú pocit strachu, napríklad pri pozeraní hororových filmov alebo na horskej dráhe, zatiaľ čo iní sa týmto zážitkom vyhýbajú?
+Ako môže pozorovanie správania iných ľudí v sociálnej situácii poskytnúť informácie o kultúrnych normách a očakávaniach?
+Máme morálnu povinnosť skúmať vesmír, alebo by sme sa mali najskôr zamerať na riešenie problémov Zeme?
+Je vo svete, kde čoraz viac prevláda automatizácia, dôležitejšie uprednostňovať vytváranie pracovných miest alebo technologický pokrok?
+Koľkokrát za život žmurkne priemerný človek? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko atómov je v zrnku soli? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko bleskov zasiahne Zem každý deň? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko balónov by bolo potrebných na zdvihnutie domu ako vo filme \Hore\? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko textových správ sa globálne odošle za minútu? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko slov sa povie denne na Zemi? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko snehových vločiek padne počas typickej zimy? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko strán majú všetky knihy, ktoré boli kedy napísané? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľkokrát obehla Zem okolo Slnka od začiatku života? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Koľko piesní bolo nahraných počas histórie? Skúste svoju odpoveď vysvetliť. Vaše vysvetlenie by malo čitateľa previesť vaším uvažovaním krok za krokom.
+Čo keby bol internet vynájdený v období renesancie?
+Čo ak by Aztékovia úspešne odrazili španielskych dobyvateľov?
+Čo keby k čiernej smrti nedošlo v 14. storočí?
+Čo keby sa Isaac Newton zameral na biológiu namiesto fyziky?
+Čo keby sa Beatles nikdy nesformovali ako kapela?
+Čo keby Alan Turing neprelomil kód Enigmy počas druhej svetovej vojny?
+Čo keby Suezský prieplav nikdy nebol postavený?
+Čo keby sa Mayská civilizácia nikdy záhadne nezrútila?
+Čo keby Krištof Kolumbus neobjavil Ameriku?
+Čo ak by bol Vincent van Gogh počas svojho života úspešným umelcom?
+Môžete mi pomôcť napísať formálny e-mail potenciálnemu obchodnému partnerovi s návrhom spoločného podniku?
+Môžete mi pomôcť napísať výpoveď môjmu súčasnému zamestnávateľovi a zároveň odísť za dobrých podmienok a vyjadriť vďačnosť za poskytnuté príležitosti?
+Použite vhodný formát na štruktúrovanie formálneho odporúčacieho listu pre študenta, ktorý sa uchádza o prestížny postgraduálny program v oblasti informatiky.
+Napíšte presvedčivý e-mail s oznámením o uvedení produktu na trh, aby ste informovali našich zákazníkov o našom novom softvérovom riešení.
+Pošlite e-mail s ospravedlnením zákazníkovi, ktorý sa stretol s oneskorením v objednávke, a poskytnite mu uistenie, že problém bol vyriešený.
+Napíšte scenár k videu YouTube, ktoré bude skúmať históriu a kultúrny význam jazzu.
+Napíšte pútavý cestovateľský blogový príspevok o nedávnom výlete na Havaj, zdôraznite kultúrne zážitky a atrakcie, ktoré musíte vidieť.
+Napíšte pútavú filmovú recenziu na nedávno vydaný sci-fi film, v ktorom diskutujte o jeho zápletke, postavách a špeciálnych efektoch.
+Vytvorte scenár podcastu pre epizódu, v ktorej sa diskutuje o vplyve streamovacích platforiem na hudobný priemysel.
+Napíšte recenziu symfonického koncertu, diskutujte o vystúpení orchestra a celkovom zážitku publika.

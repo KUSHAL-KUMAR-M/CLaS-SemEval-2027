@@ -1,0 +1,70 @@
+Zaman yönetimi becerilerimi nasıl geliştirebilirim?
+Stresle başa çıkmanın en etkili yolları nelerdir?
+Python ve JavaScript programlama dilleri arasındaki temel farklar nelerdir?
+Evden çalışırken verimliliğimi nasıl artırabilirim?
+Kuantum hesaplamanın temellerini açıklayabilir misiniz?
+Bitki bazlı ve hayvan bazlı protein kaynakları arasındaki farklar nelerdir?
+Eleştirel düşünme becerilerimi nasıl geliştirebilirim?
+Bugün eğitim sektörünün karşılaştığı en büyük zorluklar nelerdir?
+Tüketici davranışını etkileyen birincil faktörler nelerdir?
+İşyerinde çatışma çözümü için en etkili stratejiler nelerdir?
+Tek kullanımlık bir plastik şişe kullanmanın hem çevre hem de insan sağlığı üzerinde yeniden kullanılabilir bir şişe kullanmaya kıyasla bazı potansiyel etkileri nelerdir?
+Kapsayıcı ve erişilebilir bir toplu taşıma sistemi tasarlarken hangi faktörleri düşünürdünüz?
+Hükümetler ekonomik durgunluklarla mücadele etmek için mali ve para politikalarını nasıl kullanabilirler?
+Dil ve kültürel engeller insanların çok kültürlü toplumlarda iletişim ve ilişkiler kurma biçimlerini nasıl etkiler?
+Sağlık hizmeti sunumunun kalitesini ve verimliliğini artırmak için yapay zekanın kullanılabileceği bir senaryoyu açıklayın.
+CRISPR-CAS9 teknolojisini kullanarak gen düzenleme sürecini açıklayın ve potansiyel uygulamalarını ve etik sonuçlarını tartışın.
+Aşılar bireyleri ve toplulukları bulaşıcı hastalıklardan korumak için nasıl çalışır ve sürü bağışıklığı nedir?
+Sosyal medya platformları, insanların haberleri tüketme ve paylaşma şeklini nasıl etkiler ve yanlış bilginin yayılmasında potansiyel sonuçlar nelerdir?
+Kültürel, sosyal ve ekonomik faktörler insanların gıda seçimlerini nasıl etkiler ve bu bilgi daha sağlıklı diyetleri teşvik etmek için nasıl kullanılabilir?
+Doğal seleksiyon sürecini ve türlerin evrimine ve adaptasyonuna nasıl katkıda bulunduğunu açıklayın.
+Kraliyet ziyafetinde kendinizi ortaçağ şövalyesi olarak nasıl tanıtırsınız?
+Bir korsan kaptan olarak, mürettebatınıza gizli hazineyi aramaya motive etmek için ne söylerdiniz?
+Shakespeare karakteri olsaydınız, iç monologda birine olan sevginizi nasıl ilan edersiniz?
+Bir süper kahraman olarak, menşe hikayenizi meraklı bir çocuğa nasıl açıklarsınız?
+3000 yılından bir zaman gezgini olduğunuzu düşünün. İnsanlara hangi teknolojik gelişmelerden bahsedersiniz?
+Bir spor yorumcusu olarak, bir şampiyonluk oyununun son saniyesinde kazanan oyunu açıklayın.
+Dünyaca ünlü bir şefmiş gibi davran. İmza yemeğinizi bir jüri paneline nasıl tanımlarsınız?
+Everest Dağının zirvesine ulaşan bir dağ tırmanıcısınız. Duygularınızı ve zirveden manzarayı anlatın.
+Marsta bir uzay kolonisti olarak, günlük hayatınızı ve başka bir gezegende yaşadığınız zorlukları tanımlayın.
+Kıyamet sonrası bir dünyada bir karakter gibi davranın. Nasıl hayatta kaldığınızı ve karşılaştığınız müttefikleri açıklayın.
+Bir restoranın yerliler arasında popüler olup olmadığını veya çoğunlukla turistleri çekip çekmediğini nasıl belirleyebilirsiniz ve bu bilgiler neden yararlı olabilir?
+Birinin gerçekten karışık veya bilgisiz olduğunda bir konuyu veya konuşmayı anladığını iddia eden bazı ince ipuçları nelerdir?
+Birisi neden bir GPS cihazına veya akıllı telefon uygulamasına güvenmek yerine kağıt haritası kullanmayı veya yol tarifi isteyebilir?
+Bir kişinin gerçekten bir sohbetle ilgilenip ilgilenmediğini veya sadece kibar olup olmadığını nasıl belirleyebilirsiniz?
+Birisi neden fiyatlar daha yüksek olsa bile, büyük bir zincir mağaza yerine yerel olarak sahip olduğu küçük bir işte alışveriş yapmayı tercih edebilir?
+Yalnızca yazarın veya yayıncının itibarına güvenmeden haber makalesi veya blog yazısı gibi bir bilgi kaynağının güvenilirliğini nasıl değerlendirebilirsiniz?
+Neden bazı insanlar korku filmleri izlemek veya roller bardak altlıklarına gitmek gibi korkma hissinden zevk alırken, diğerleri bu deneyimlerden kaçınır?
+Sosyal bir durumda diğer insanların davranışlarını gözlemlemek kültürel normlar ve beklentiler hakkında nasıl ipuçları sağlayabilir?
+Uzayı keşfetmek için ahlaki bir yükümlülüğümüz var mı, yoksa önce Dünyanın sorunlarını çözmeye mi odaklanmalıyız?
+Otomasyonun giderek yaygınlaştığı bir dünyada, istihdam yaratmaya veya teknolojik ilerlemeye öncelik vermek daha önemli mi?
+Ortalama insan bir ömür boyu kaç kez göz kırpıyor? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Bir tuz tanesinde kaç atom var? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Dünyada her gün kaç şimşek meydana geliyor? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+"Up" filminde olduğu gibi bir evi kaldırmak için kaç balon gerekir? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Bir dakika içinde küresel olarak kaç metin mesajı gönderilir? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Dünyada günlük kaç kelime konuşuluyor? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Tipik bir kış boyunca kaç kar tanesi düşer? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Şimdiye kadar yazılmış tüm kitaplarda kaç sayfa var? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Yaşamın başlangıcından bu yana Dünya Güneşi kaç kez döndü? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Tarih boyunca kaç şarkı kaydedildi? Cevabınızı açıklamaya çalışın. Açıklamanız okuyucuyu akıl yürütme yoluyla adım adım almalıdır.
+Ya internet Rönesans döneminde icat edilmiş olsaydı?
+Ya Aztekler İspanyol fetihlerini başarıyla itmiş olsaydı?
+Ya Kara Ölüm 14. yüzyılda gerçekleşmemiş olsaydı?
+Ya Isaac Newton fizik yerine biyolojiye odaklanmış olsaydı?
+Ya Beatles hiç grup olarak oluşmamış olsaydı?
+Ya Alan Turing II. Dünya Savaşı sırasında Enigma Kodunu kırmamış olsaydı?
+Ya Süveyş Kanalı hiç inşa edilmemiş olsaydı?
+Ya Maya uygarlığı hiç gizemli bir şekilde çökmemiş olsaydı?
+Ya Christopher Columbus Amerikayı keşfetmemiş olsaydı?
+Ya Vincent Van Gogh yaşamı boyunca başarılı bir sanatçı olsaydı?
+Ortak girişim öneren potansiyel bir iş ortağına resmi bir e posta yazmama yardım edebilir misiniz?
+Mevcut işverenime bir istifa mektubu yazmama yardım edebilir misiniz, iyi şartlar bırakıp sağlanan fırsatlar için minnettarlığı ifade eder misiniz?
+Bilgisayar Bilimlerinde prestijli bir lisansüstü programa başvuran bir öğrenci için resmi bir tavsiye mektubu yapılandırmak için uygun bir format kullanın.
+Müşterilerimize yeni yazılım çözümümüzü bilgilendirmek için zorlayıcı bir ürün lansman duyuru e postası yazın.
+Siparişlerinde bir gecikme yaşayan bir müşteriye özür e postası hazırlayın ve sorunun çözüldüğüne dair güvence sağlayın.
+Cazın tarihini ve kültürel önemini araştıran bir YouTube videosu için bir senaryo yazın.
+Kültürel deneyimleri ve görülmesi gereken cazibe merkezlerini vurgulayan Hawaiiye yakın zamanda yapılan bir gezi hakkında ilgi çekici bir seyahat blogu yazısı oluşturun.
+Yakın zamanda yayınlanan bir bilim kurgu filmi için büyüleyici bir film incelemesi yazın, planını, karakterlerini ve özel efektlerini tartışın.
+Akış platformlarının müzik endüstrisi üzerindeki etkisini tartışan bir bölüm için bir podcast betiği yapısı.
+Orkestranın performansını ve genel izleyici deneyimini tartışarak bir senfoni konser incelemesi yazın.
