@@ -1,0 +1,402 @@
+{
+  "flores_dataset": "openlanguagedata/flores_plus",
+  "flores_splits": [
+    "dev",
+    "devtest"
+  ],
+  "clas_source": "hf",
+  "clas_repo": "DGurgurov/CLaS-Bench",
+  "languages": {
+    "ar": {
+      "name": "Arabic",
+      "flores": "arb_Arab",
+      "flores_config": "arb_Arab",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/ar.txt",
+        "n": 2009,
+        "sha256": "1317d5060e3cb53a"
+      },
+      "validation": {
+        "file": "data/validation/ar.txt",
+        "n": 70,
+        "sha256": "99b6ad587fb3a856"
+      }
+    },
+    "cs": {
+      "name": "Czech",
+      "flores": "ces_Latn",
+      "flores_config": "ces_Latn",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/cs.txt",
+        "n": 2009,
+        "sha256": "c1424b897f13682c"
+      },
+      "validation": {
+        "file": "data/validation/cs.txt",
+        "n": 70,
+        "sha256": "3449655487472a94"
+      }
+    },
+    "de": {
+      "name": "German",
+      "flores": "deu_Latn",
+      "flores_config": "deu_Latn",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/de.txt",
+        "n": 2009,
+        "sha256": "f6861d0e7c0ffdbe"
+      },
+      "validation": {
+        "file": "data/validation/de.txt",
+        "n": 70,
+        "sha256": "25360972d2f20534"
+      }
+    },
+    "el": {
+      "name": "Greek",
+      "flores": "ell_Grek",
+      "flores_config": "ell_Grek",
+      "joshi": 3,
+      "pool": "low",
+      "train": {
+        "file": "data/train/el.txt",
+        "n": 2009,
+        "sha256": "8c585c3442aeaf39"
+      },
+      "validation": {
+        "file": "data/validation/el.txt",
+        "n": 70,
+        "sha256": "7706bc29740ac9d9"
+      }
+    },
+    "en": {
+      "name": "English",
+      "flores": "eng_Latn",
+      "flores_config": "eng_Latn",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/en.txt",
+        "n": 2009,
+        "sha256": "975dcc5ad184dbe5"
+      },
+      "validation": {
+        "file": "data/validation/en.txt",
+        "n": 70,
+        "sha256": "667e702dd5b77e49"
+      }
+    },
+    "es": {
+      "name": "Spanish",
+      "flores": "spa_Latn",
+      "flores_config": "spa_Latn",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/es.txt",
+        "n": 2009,
+        "sha256": "4015e4706b479b00"
+      },
+      "validation": {
+        "file": "data/validation/es.txt",
+        "n": 70,
+        "sha256": "676f572e502e7e0a"
+      }
+    },
+    "fa": {
+      "name": "Persian",
+      "flores": "pes_Arab",
+      "flores_config": "pes_Arab",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/fa.txt",
+        "n": 2009,
+        "sha256": "500b9c2fb91127cf"
+      },
+      "validation": {
+        "file": "data/validation/fa.txt",
+        "n": 70,
+        "sha256": "4e99a6b1a20524ec"
+      }
+    },
+    "fr": {
+      "name": "French",
+      "flores": "fra_Latn",
+      "flores_config": "fra_Latn",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/fr.txt",
+        "n": 2009,
+        "sha256": "02bbe9b683fc9a18"
+      },
+      "validation": {
+        "file": "data/validation/fr.txt",
+        "n": 70,
+        "sha256": "b8ebefa8cdd5ae17"
+      }
+    },
+    "hi": {
+      "name": "Hindi",
+      "flores": "hin_Deva",
+      "flores_config": "hin_Deva",
+      "joshi": 4,
+      "pool": "high",
+      "train": {
+        "file": "data/train/hi.txt",
+        "n": 2009,
+        "sha256": "8a3f4f08fc8c87a8"
+      },
+      "validation": {
+        "file": "data/validation/hi.txt",
+        "n": 70,
+        "sha256": "c593417738c11e52"
+      }
+    },
+    "it": {
+      "name": "Italian",
+      "flores": "ita_Latn",
+      "flores_config": "ita_Latn",
+      "joshi": 4,
+      "pool": "spare",
+      "train": {
+        "file": "data/train/it.txt",
+        "n": 2009,
+        "sha256": "79189e1e98ae3d03"
+      },
+      "validation": {
+        "file": "data/validation/it.txt",
+        "n": 70,
+        "sha256": "03a3375e9b2a02cc"
+      }
+    },
+    "ja": {
+      "name": "Japanese",
+      "flores": "jpn_Jpan",
+      "flores_config": "jpn_Jpan",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/ja.txt",
+        "n": 2009,
+        "sha256": "f82a336e39542690"
+      },
+      "validation": {
+        "file": "data/validation/ja.txt",
+        "n": 70,
+        "sha256": "c8fd12f386122ae2"
+      }
+    },
+    "ka": {
+      "name": "Georgian",
+      "flores": "kat_Geor",
+      "flores_config": "kat_Geor",
+      "joshi": 3,
+      "pool": "spare",
+      "train": {
+        "file": "data/train/ka.txt",
+        "n": 2009,
+        "sha256": "79041f6b80763363"
+      },
+      "validation": {
+        "file": "data/validation/ka.txt",
+        "n": 70,
+        "sha256": "bcdac13af3c696f9"
+      }
+    },
+    "ko": {
+      "name": "Korean",
+      "flores": "kor_Hang",
+      "flores_config": "kor_Hang",
+      "joshi": 4,
+      "pool": "high",
+      "train": {
+        "file": "data/train/ko.txt",
+        "n": 2009,
+        "sha256": "ac0b8c815af96f91"
+      },
+      "validation": {
+        "file": "data/validation/ko.txt",
+        "n": 70,
+        "sha256": "43c8e22087e0e659"
+      }
+    },
+    "mt": {
+      "name": "Maltese",
+      "flores": "mlt_Latn",
+      "flores_config": "mlt_Latn",
+      "joshi": 2,
+      "pool": "low",
+      "train": {
+        "file": "data/train/mt.txt",
+        "n": 2009,
+        "sha256": "ff1a51cde93be462"
+      },
+      "validation": {
+        "file": "data/validation/mt.txt",
+        "n": 70,
+        "sha256": "2fe454b2ca8b7c91"
+      }
+    },
+    "no": {
+      "name": "Norwegian",
+      "flores": "nob_Latn",
+      "flores_config": "nob_Latn",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/no.txt",
+        "n": 2009,
+        "sha256": "a69262c8c92b4f2a"
+      },
+      "validation": {
+        "file": "data/validation/no.txt",
+        "n": 70,
+        "sha256": "7529b4b0224dc082"
+      }
+    },
+    "ru": {
+      "name": "Russian",
+      "flores": "rus_Cyrl",
+      "flores_config": "rus_Cyrl",
+      "joshi": 4,
+      "pool": "high",
+      "train": {
+        "file": "data/train/ru.txt",
+        "n": 2009,
+        "sha256": "e22feda1a5436fe0"
+      },
+      "validation": {
+        "file": "data/validation/ru.txt",
+        "n": 70,
+        "sha256": "e84d30c02990b5d4"
+      }
+    },
+    "sk": {
+      "name": "Slovak",
+      "flores": "slk_Latn",
+      "flores_config": "slk_Latn",
+      "joshi": 4,
+      "pool": "spare",
+      "train": {
+        "file": "data/train/sk.txt",
+        "n": 2009,
+        "sha256": "af40288dfa3e582e"
+      },
+      "validation": {
+        "file": "data/validation/sk.txt",
+        "n": 70,
+        "sha256": "b573108aa13ab801"
+      }
+    },
+    "sw": {
+      "name": "Swahili",
+      "flores": "swh_Latn",
+      "flores_config": "swh_Latn",
+      "joshi": 2,
+      "pool": "low",
+      "train": {
+        "file": "data/train/sw.txt",
+        "n": 2009,
+        "sha256": "2711d304c95ab5d3"
+      },
+      "validation": {
+        "file": "data/validation/sw.txt",
+        "n": 70,
+        "sha256": "9cd04049cd56a32b"
+      }
+    },
+    "th": {
+      "name": "Thai",
+      "flores": "tha_Thai",
+      "flores_config": "tha_Thai",
+      "joshi": 3,
+      "pool": "low",
+      "train": {
+        "file": "data/train/th.txt",
+        "n": 2009,
+        "sha256": "bf2e6da138ee5a92"
+      },
+      "validation": {
+        "file": "data/validation/th.txt",
+        "n": 70,
+        "sha256": "86b240de0b46dfcf"
+      }
+    },
+    "tr": {
+      "name": "Turkish",
+      "flores": "tur_Latn",
+      "flores_config": "tur_Latn",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/tr.txt",
+        "n": 2009,
+        "sha256": "933d581ef94df026"
+      },
+      "validation": {
+        "file": "data/validation/tr.txt",
+        "n": 70,
+        "sha256": "378a1ff73e030834"
+      }
+    },
+    "uk": {
+      "name": "Ukrainian",
+      "flores": "ukr_Cyrl",
+      "flores_config": "ukr_Cyrl",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/uk.txt",
+        "n": 2009,
+        "sha256": "96e35cf71c12f694"
+      },
+      "validation": {
+        "file": "data/validation/uk.txt",
+        "n": 70,
+        "sha256": "d099bbeba4016a8a"
+      }
+    },
+    "vi": {
+      "name": "Vietnamese",
+      "flores": "vie_Latn",
+      "flores_config": "vie_Latn",
+      "joshi": 4,
+      "pool": "low",
+      "train": {
+        "file": "data/train/vi.txt",
+        "n": 2009,
+        "sha256": "099be4a1095dc7ca"
+      },
+      "validation": {
+        "file": "data/validation/vi.txt",
+        "n": 70,
+        "sha256": "d4f867feef68bc54"
+      }
+    },
+    "zh": {
+      "name": "Chinese",
+      "flores": "zho_Hans",
+      "flores_config": "cmn_Hans",
+      "joshi": 5,
+      "pool": "high",
+      "train": {
+        "file": "data/train/zh.txt",
+        "n": 2009,
+        "sha256": "42696f1530f771b2"
+      },
+      "validation": {
+        "file": "data/validation/zh.txt",
+        "n": 70,
+        "sha256": "5f3b4a8680e0d729"
+      }
+    }
+  }
+}
