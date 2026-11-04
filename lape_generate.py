@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plain CLaS-Bench LAPE intervention, HF adaptation, evaluator-compatible JSON.
+"""Plain CLaS-Bench LAPE intervention, vLLM adaptation, evaluator-compatible JSON.
 Upstream: https://github.com/d-gurgurov/CLaS-Bench/blob/main/CLaS-Bench/3-lape_generate.py
 Source neurons are SET to deactivation_strength (not multiplied), then target
 neurons are added/replaced. Shared neurons therefore receive target editing last.
@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from types import MethodType
 import torch
+import os
+from functools import partial
 
 
 def install_intervention(layers, source_masks, target_masks, means, target_index,
@@ -71,6 +73,9 @@ def main():
     p.add_argument('--activation-strength',type=float,default=1.)
     p.add_argument('--deactivation-strength',type=float,default=0.)
     p.add_argument('--no-deactivation',action='store_true')
+    p.add_argument('--max-model-len',type=int,default=4096)
+    p.add_argument('--gpu-memory-utilization',type=float,default=0.90)
+    p.add_argument('--tensor-parallel-size',type=int,default=None)
     p.add_argument('--batch-size',type=int,default=1)
     p.add_argument('--max-new-tokens',type=int,default=1024)
     p.add_argument('--k-questions',type=int,default=70)
@@ -125,29 +130,35 @@ def main():
             print(f'Skip {source} -> {target}: complete matching output');continue
         jobs.append((source,target,prompts,path))
     if not jobs:return
-    from transformers import AutoModelForCausalLM,AutoTokenizer
-    from steering.lape_activation import find_layers
-    tokenizer=AutoTokenizer.from_pretrained(a.model);tokenizer.padding_side='left'
-    if tokenizer.pad_token_id is None:tokenizer.pad_token=tokenizer.eos_token
-    model=AutoModelForCausalLM.from_pretrained(a.model,torch_dtype=torch.float16,device_map='auto');model.eval()
-    layers=find_layers(model)
-    if len(layers)!=means.shape[0] or any(l.mlp.gate_proj.out_features!=means.shape[1] for l in layers):raise ValueError('Model/activation dimensions differ')
+    # Same opt-in required by this repo's diffmean_generate.py apply_model path.
+    os.environ.setdefault('VLLM_ALLOW_INSECURE_SERIALIZATION','1')
+    from vllm import LLM,SamplingParams
+    from utils.lape_vllm_hooks import install_lape,set_lape
+    engine=LLM(model=a.model,tensor_parallel_size=a.tensor_parallel_size or torch.cuda.device_count(),
+               max_model_len=a.max_model_len,gpu_memory_utilization=a.gpu_memory_utilization,
+               dtype='float16',enforce_eager=True,enable_prefix_caching=False)
+    installed=engine.apply_model(install_lape)
+    if any(n!=means.shape[0] for n in installed):raise ValueError('Model/activation layer mismatch')
+    sampling=SamplingParams(temperature=0.,max_tokens=a.max_new_tokens,repetition_penalty=1.,skip_special_tokens=True)
     for source,target,prompts,path in jobs:
-        originals=install_intervention(layers,None if a.no_deactivation else masks[mapping[source]],
-                                      masks[mapping[target]],means,mapping[target],a.activation_method,
-                                      a.deactivation_strength,a.activation_strength)
-        responses=[]
+        targets=masks[mapping[target]]
+        boosts=[]
+        for idx,indices in enumerate(targets):
+            values=means[idx,indices,mapping[target]]
+            if a.activation_method=='diffmean':
+                others=[i for i in range(len(languages)) if i!=mapping[target]]
+                values=values-means[idx,indices][:,others].mean(-1)
+            boosts.append(values)
         try:
-            for start in range(0,len(prompts),a.batch_size):
-                texts=[tokenizer.apply_chat_template([{'role':'user','content':q}],tokenize=False,add_generation_prompt=True) for q in prompts[start:start+a.batch_size]]
-                enc=tokenizer(texts,padding=True,add_special_tokens=False,return_tensors='pt').to(model.get_input_embeddings().weight.device)
-                config=model.config.get_text_config() if hasattr(model.config,'get_text_config') else model.config
-                if enc.input_ids.shape[1]+a.max_new_tokens>getattr(config,'max_position_embeddings',10**9):raise ValueError('Prompt plus answer exceeds context')
-                with torch.inference_mode():
-                    out=model.generate(**enc,max_new_tokens=a.max_new_tokens,do_sample=False,temperature=None,top_p=None,pad_token_id=tokenizer.pad_token_id)
-                responses.extend(tokenizer.batch_decode(out[:,enc.input_ids.shape[1]:],skip_special_tokens=True))
-                print(f'{source}->{target}: {len(responses)}/{len(prompts)}',flush=True)
-        finally:restore(originals)
+            engine.apply_model(partial(set_lape,None if a.no_deactivation else masks[mapping[source]],
+                                       targets,boosts,means.shape[1],a.activation_method,
+                                       a.deactivation_strength,a.activation_strength))
+            messages=[[{'role':'user','content':q}] for q in prompts]
+            generated=engine.chat(messages,sampling_params=sampling)
+            responses=[o.outputs[0].text for o in generated]
+            if len(responses)!=len(prompts):raise RuntimeError('Incomplete generation')
+        finally:
+            engine.apply_model(partial(set_lape,None,None,None,means.shape[1],a.activation_method,0.,0.))
         result=dict(source_language=source,target_language=target,model=a.model,track=a.track or 'custom',
                     method=f'lape:{a.activation_method}',run_config=signature,
                     results=[dict(question_idx=i,input=q,original_prompt=q,output=r.strip()) for i,(q,r) in enumerate(zip(prompts,responses))])
