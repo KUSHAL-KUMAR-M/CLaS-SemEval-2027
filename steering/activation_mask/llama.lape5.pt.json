@@ -1,0 +1,236 @@
+{
+  "languages": [
+    "ar",
+    "cs",
+    "de",
+    "el",
+    "en",
+    "es",
+    "fa",
+    "fr",
+    "hi",
+    "it",
+    "ja",
+    "ka",
+    "ko",
+    "mt",
+    "no",
+    "ru",
+    "sk",
+    "sw",
+    "th",
+    "tr",
+    "uk",
+    "vi",
+    "zh"
+  ],
+  "language_to_index": {
+    "ar": 0,
+    "cs": 1,
+    "de": 2,
+    "el": 3,
+    "en": 4,
+    "es": 5,
+    "fa": 6,
+    "fr": 7,
+    "hi": 8,
+    "it": 9,
+    "ja": 10,
+    "ka": 11,
+    "ko": 12,
+    "mt": 13,
+    "no": 14,
+    "ru": 15,
+    "sk": 16,
+    "sw": 17,
+    "th": 18,
+    "tr": 19,
+    "uk": 20,
+    "vi": 21,
+    "zh": 22
+  },
+  "num_layers": 32,
+  "intermediate_size": 14336,
+  "settings": {
+    "model": "meta-llama/Llama-3.1-8B-Instruct",
+    "revision": "main",
+    "resolved_revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+    "method": "lape_gate_activation",
+    "seq_len": 1024,
+    "target_tokens": 10000000,
+    "dtype": "float16",
+    "input_format": "tokens",
+    "activation_site": "act_fn(gate_proj), before up multiplication"
+  },
+  "sources": [
+    {
+      "language": "ar",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.ar.pt",
+      "n": 87040,
+      "sha256": "390530fb14a6097504d8676e75c843bff7a482c41d65e82f1cb568d4940f69ed"
+    },
+    {
+      "language": "cs",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.cs.pt",
+      "n": 78848,
+      "sha256": "3b57a922418c8bc03afae4fd151d99c2123a7389c325b7b748f7a366844af263"
+    },
+    {
+      "language": "de",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.de.pt",
+      "n": 82944,
+      "sha256": "0a42878c1343c8cd6ec09b86965fc5d16056f1c7b38d580f403b34ed1839ec2b"
+    },
+    {
+      "language": "el",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.el.pt",
+      "n": 117760,
+      "sha256": "186f97d7d5122177b287d18d316c6150439caadf57d4e31dd65de771dff68e49"
+    },
+    {
+      "language": "en",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.en.pt",
+      "n": 52224,
+      "sha256": "4b7457842e1b86eadb0c8f832bce28072d9241b855b433f51a7fac1646004688"
+    },
+    {
+      "language": "es",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.es.pt",
+      "n": 80896,
+      "sha256": "8df0aadc8e048684c27fb3fd03c33228e86ec1513b2d02d91d8e6fff331301c1"
+    },
+    {
+      "language": "fa",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.fa.pt",
+      "n": 79872,
+      "sha256": "4ac524d0f5194159fcda67888f9be9c88e596d1e65c290e58e740f5ae3a5e838"
+    },
+    {
+      "language": "fr",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.fr.pt",
+      "n": 83968,
+      "sha256": "f2f50dc65b30eb6d29bafa9aea842982ff3f0d0bf52454e62c05f44380f616a0"
+    },
+    {
+      "language": "hi",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.hi.pt",
+      "n": 133120,
+      "sha256": "c4b50a84451bd3c328f9a72f1d5e4c67eaceeaeda530531e4a3ad6c4cfb59d4e"
+    },
+    {
+      "language": "it",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.it.pt",
+      "n": 86016,
+      "sha256": "e63a4e3555759991c014170888cf674d1ba75e802c4e1d9411f7eafd9e0ccdb1"
+    },
+    {
+      "language": "ja",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.ja.pt",
+      "n": 79872,
+      "sha256": "b4ac8b4f65866ecf21aa8e4da8f7715b590967d333b7917f527c92a626f69209"
+    },
+    {
+      "language": "ka",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.ka.pt",
+      "n": 518144,
+      "sha256": "458ced3331d97df05e894faea666137fde47eef069cf94499aca746b8e8be564"
+    },
+    {
+      "language": "ko",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.ko.pt",
+      "n": 78848,
+      "sha256": "a24943c7ecfacde33efe9b7f369fad483807e99fcba6900bd36063dec614f537"
+    },
+    {
+      "language": "mt",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.mt.pt",
+      "n": 125952,
+      "sha256": "089cfe457a03433e336e30a2c6d544c7432002d278222b51b564db7531a6d759"
+    },
+    {
+      "language": "no",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.no.pt",
+      "n": 80896,
+      "sha256": "4580f44d7466009862205a29265705fdb9f8c6236a78794dce4881a916b0f713"
+    },
+    {
+      "language": "ru",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.ru.pt",
+      "n": 86016,
+      "sha256": "24c687ff8586bf55b315780d431bfba4d69084a770aeea2b2e344448691cf69d"
+    },
+    {
+      "language": "sk",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.sk.pt",
+      "n": 97280,
+      "sha256": "2183991a070f240b845926bc5909d88b6af8496ba520b7ee915ac35c434b9ca7"
+    },
+    {
+      "language": "sw",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.sw.pt",
+      "n": 101376,
+      "sha256": "2ea0718344ac7f35e80936357fdcb88357c1b8c74db85e86d91f306d6fb1ca1e"
+    },
+    {
+      "language": "th",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.th.pt",
+      "n": 115712,
+      "sha256": "6c63c4cf38f0dc047391b2d51e734e452b390f9f56cb959d04c6d86e35dbdcb0"
+    },
+    {
+      "language": "tr",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.tr.pt",
+      "n": 73728,
+      "sha256": "3777375777bb4337c9d717b2b954e4796fddab4d3230633960721a0d94046e55"
+    },
+    {
+      "language": "uk",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.uk.pt",
+      "n": 87040,
+      "sha256": "d6e4016ba7a6616e54a17f0c4e3d8199b2f220fecb3a6b8f2e261a795c7a5dba"
+    },
+    {
+      "language": "vi",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.vi.pt",
+      "n": 72704,
+      "sha256": "29cfc1b4024c9c62d1bf4a1c8b7391847a39bb015622efa173375cf1eb24be9f"
+    },
+    {
+      "language": "zh",
+      "file": "/kaggle/working/CLaS-SemEval-2027/steering/data_llama/activation.zh.pt",
+      "n": 67584,
+      "sha256": "76efb8dbf736ae3d914a123b6cb6ecdb07c80abaf9a8abe826729a481cb83d9a"
+    }
+  ],
+  "top_rate": 0.05,
+  "filter_rate": 0.95,
+  "activation_bar_ratio": 0.95,
+  "probability_threshold": 0.6631159782409668,
+  "eligible_neurons": 103894,
+  "entropy_candidates": 22938,
+  "counts": [
+    1958,
+    2785,
+    2329,
+    1344,
+    269,
+    1832,
+    1953,
+    2137,
+    2428,
+    2376,
+    1960,
+    2354,
+    1102,
+    6375,
+    3625,
+    1323,
+    4098,
+    7503,
+    1260,
+    2814,
+    1982,
+    2258,
+    1252
+  ]
+}
